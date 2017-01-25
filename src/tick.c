@@ -7,6 +7,7 @@ void tick() {
 	// 1 3
 	// 2 10
 
+	// Wheels
 	motorSet(1,  -dewine(joystick_analog(3))
 				- dewine(joystick_analog(4))
 				- dewine(joystick_analog(1)));
@@ -23,6 +24,7 @@ void tick() {
 				+ dewine(joystick_analog(4))
 				- dewine(joystick_analog(1)));
 
+	// Arms
 	int arm = 0;
 
 	if (joystick_digital(5, JOY_UP)) {
@@ -33,8 +35,12 @@ void tick() {
 		arm = 0;
 	}
 
-	armSet(arm);
+	motorSet(4, -arm);
+	motorSet(5, arm);
+	motorSet(6, arm);
+	motorSet(7, -arm);
 
+	// Claw
 	if(joystick_digital(6, JOY_UP)) {
 		motorSet(8, -127);
 	} else if(joystick_digital(6, JOY_DOWN)) {
@@ -42,9 +48,6 @@ void tick() {
 	} else {
 		motorSet(8, 0);
 	}
-
-	lcdPrint(uart1, 1, "Main:   %d", powerLevelMain());
-	lcdPrint(uart1, 2, "Backup: %d", analogRead(1));
 
 	delay(10);
 }

@@ -19,10 +19,12 @@ bool RECORDING;
 void autonomous_load() {
 	RECORDING = false;
 	writeJINXMessage("Loading autonomous program...");
+
 	f = fopen("autoprog", "r");
-	autonomous_prog = (JoystickState*)malloc(fcount(f));
+	autonomous_prog = (JoystickState*)malloc(fcount(f)); // Allocates memory for the autonomous inputs.
 	max_frames = fcount(f) / 8;
-	fread(autonomous_prog, 1, fcount(f), f);
+	fread(autonomous_prog, 1, fcount(f), f); // Reads autonomous program into memory.
+
 	auto_enabled = true;
 	fclose(f);
 }
@@ -74,14 +76,25 @@ void joystick_update() {
 		current_state.button_mask.g8 += joystickGetDigital(1, 8, JOY_RIGHT) * JOY_RIGHT;
 
 		if(RECORDING) {
+			// Writes the controller state to the file.
 			fwrite(&current_state, 8, 1, f);
 			fflush(f);
 		}
 	} else {
 		if(auto_enabled) {
 			if(autonomous_frame < max_frames) {
-				memcpy(&current_state, &autonomous_prog[autonomous_frame], 8);
-				autonomous_frame++;
+				if(!(analogRead(1) > 1360 && analogRead(1) < 2730)) {
+					// Copy current autonomous inputs from memory.
+					memcpy(&current_state, &autonomous_prog[autonomous_frame], 8);
+					autonomous_frame++;
+
+					if(analogRead(1) > 2730) {
+						current_state.axes[0] = -current_state.axes[0];
+						current_state.axes[3] = -current_state.axes[3];
+					}
+				} else {
+					memset(&current_state, 0, 8);
+				}
 			} else {
 				memset(&current_state, 0, 8);
 			}

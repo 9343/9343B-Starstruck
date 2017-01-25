@@ -36,10 +36,34 @@ void parseMessage(JINX* inStr)
 		fdelete("autoprog");
 		writeJINXMessage("Cortex is ready for power cycle.");
 	}
+	else if(strcmp(inStr->command, "backup") == 0)
+	{
+		char filename[strlen(inStr->command - 7)];
+		memcpy(&filename[0], &inStr->command[strlen(inStr->command - 7)], strlen(inStr->command - 7) + 1);
+
+		FILE* in = fopen("autoprog", "r");
+		FILE* out = fopen(filename, "w");
+		size_t size = fcount(in);
+		char buf[size];
+		fread(&buf[0], size, 1, in);
+		fwrite(&buf[0], size, 1, out);
+	}
+	else if(strcmp(inStr->command, "restore") == 0)
+	{
+		char filename[strlen(inStr->command - 7)];
+		memcpy(&filename[0], &inStr->command[strlen(inStr->command - 7)], strlen(inStr->command - 7) + 1);
+
+		FILE* in = fopen(filename, "r");
+		FILE* out = fopen("autoprog", "w");
+		size_t size = fcount(in);
+		char buf[size];
+		fread(&buf[0], size, 1, in);
+		fwrite(&buf[0], size, 1, out);
+	}
 }
 
 void initializeIO() {
-	pinMode(10, INPUT);
+
 }
 
 void initialize() {

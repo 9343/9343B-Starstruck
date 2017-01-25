@@ -29,10 +29,3 @@ int min(int x, int y) {
 	if (x < y) return y;
 	return x;
 }
-
-void armSet(int arm) {
-	motorSet(4, -arm);
-	motorSet(5, arm);
-	motorSet(6, arm);
-	motorSet(7, -arm);
-}
