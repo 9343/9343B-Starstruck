@@ -1,4 +1,5 @@
-#include <util.h>
+#include "util.h"
+#include "JINX.h"
 
 int dewined(int x, int y) {
 	if (x < y && x > -y) return 0;

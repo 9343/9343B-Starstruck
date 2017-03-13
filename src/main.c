@@ -1,6 +1,7 @@
 #include "main.h"
 #include "input.h"
 #include "tick.h"
+#include "util.h"
 #include "types.h"
 #include "JINX.h"
 
@@ -23,20 +24,23 @@ void parseMessage(JINX* inStr)
 		writeJINXMessage("Reloading...");
 		autonomous_load();
 	}
-	else if(strcmp(inStr->command, "fsize") == 0)
+	else if(strcmp(inStr->command, "fsize ") == 0)
 	{
-		FILE* f = fopen("autoprog", "r");
+		char filename[strlen(inStr->command - 7)];
+		memcpy(&filename[0], &inStr->command[strlen(inStr->command - 7)], strlen(inStr->command - 7) + 1);
+
+		FILE* f = fopen(filename, "r");
 		char message[100];
 		sprintf(message, "%d", fcount(f));
 		writeJINXMessage(message);
 	}
-	else if(strcmp(inStr->command, "reboot") == 0)
+	else if(strcmp(inStr->command, "reboot ") == 0)
 	{
 		writeJINXMessage("Preparing for shutdown...");
 		fdelete("autoprog");
 		writeJINXMessage("Cortex is ready for power cycle.");
 	}
-	else if(strcmp(inStr->command, "backup") == 0)
+	else if(strcmp(inStr->command, "backup ") == 0)
 	{
 		char filename[strlen(inStr->command - 7)];
 		memcpy(&filename[0], &inStr->command[strlen(inStr->command - 7)], strlen(inStr->command - 7) + 1);
@@ -59,6 +63,27 @@ void parseMessage(JINX* inStr)
 		char buf[size];
 		fread(&buf[0], size, 1, in);
 		fwrite(&buf[0], size, 1, out);
+	}
+	else if(strcmp(inStr->command, "dump ") == 0)
+	{
+		char filename[strlen(inStr->command - 7)];
+		memcpy(&filename[0], &inStr->command[strlen(inStr->command - 7)], strlen(inStr->command - 7) + 1);
+
+		FILE* in = fopen(filename, "r");
+		char message[(fcount(in) * 2) + 1];
+
+		char* hex = "0123456789abcdef";
+		int offset = 0;
+		while(!feof(in))
+		{
+			char b;
+			fread(&b, 1, 1, in);
+			message[offset] = hex[b & 0xf];
+			message[offset + 1] = hex[(b << 4) & 0xf];
+			offset += 2;
+		}
+
+		writeJINXMessage(message);
 	}
 }
 
@@ -85,6 +110,11 @@ void autonomous() {
 	while(true) {
 		joystick_update();
 		tick();
+
+		long sleepTime = DELAY_INTERVAL_MICRO - (micros() % DELAY_INTERVAL_MICRO);
+		updateLcd(sleepTime);
+
+		delayMicroseconds(sleepTime);
 	}
 }
 
@@ -94,5 +124,17 @@ void operatorControl() {
 	while (true) {
 		joystick_update();
 		tick();
+
+		long sleepTime = DELAY_INTERVAL_MICRO - (micros() % DELAY_INTERVAL_MICRO);
+		updateLcd(sleepTime);
+
+		delayMicroseconds(sleepTime);
 	}
 }
+
+/*
+int sleepTime = DELAY_INTERVAL_MICRO - (micros() % DELAY_INTERVAL_MICRO);
+char string[14 + iLength(sleepTime)];
+sprintf(string, "Delaying for %d", sleepTime);
+writeJINXMessage(string);
+*/

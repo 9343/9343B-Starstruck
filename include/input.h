@@ -2,6 +2,7 @@
 
 #define JOYSTICK_MODE_AUTO 1
 #define JOYSTICK_MODE_DRIVER 0
+#define DELAY_INTERVAL_MICRO 10000
 
 void autonomous_load(); // Loads autonomous from autoprog.
 void start_recording(); // Starts recording a new autonomous program.

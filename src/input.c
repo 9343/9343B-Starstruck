@@ -37,7 +37,6 @@ void start_recording() {
 void stop_recording() {
 	RECORDING = false;
 	fclose(f);
-	f = NULL;
 }
 
 void joystick_setMode(int mode) {
@@ -81,23 +80,10 @@ void joystick_update() {
 			fflush(f);
 		}
 	} else {
-		if(auto_enabled) {
-			if(autonomous_frame < max_frames) {
-				if(!(analogRead(1) > 1360 && analogRead(1) < 2730)) {
-					// Copy current autonomous inputs from memory.
-					memcpy(&current_state, &autonomous_prog[autonomous_frame], 8);
-					autonomous_frame++;
-
-					if(analogRead(1) > 2730) {
-						current_state.axes[0] = -current_state.axes[0];
-						current_state.axes[3] = -current_state.axes[3];
-					}
-				} else {
-					memset(&current_state, 0, 8);
-				}
-			} else {
-				memset(&current_state, 0, 8);
-			}
+		if(autonomous_frame < max_frames) {
+			// Copy current autonomous inputs from memory.
+			memcpy(&current_state, &autonomous_prog[autonomous_frame], 8);
+			autonomous_frame++;
 		} else {
 			memset(&current_state, 0, 8);
 		}
