@@ -3,26 +3,6 @@
 #include "input.h"
 #include "util.h"
 
-int lastState = 1;
-
-void updateLcd(long time) {
-	lcdClear(uart1);
-
-	int buttons = lcdReadButtons(uart1);
-	if (buttons == 1 || buttons == 2 || buttons == 4) {
-		lastState = buttons;
-	}
-
-	if (lastState == 1) {
-		lcdPrint(uart1, 1, "Batt 1: %dmV", powerLevelMain());
-		lcdPrint(uart1, 2, "Batt 2: %dmVish", analogRead(1) * 3);
-	} else if (lastState == 2) {
-		lcdPrint(uart1, 1, "Backup: %dmV", powerLevelBackup());
-	} else if (lastState == 4) {
-		lcdPrint(uart1, 1, "Tick Time: %dus", DELAY_INTERVAL_MICRO - (int) time);
-	}
-}
-
 void tick() {
 	// 7 3
 	// 2 9

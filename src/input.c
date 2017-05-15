@@ -1,42 +1,60 @@
 #include "main.h"
 #include "types.h"
 #include "input.h"
-#include "JINX.h"
+#include <string.h>
 
 JoystickState current_state;
 int current_mode;
 
-JoystickState* autonomous_prog;
+JoystickState autonomous_prog[6000];
 u64 autonomous_frame;
 u64 max_frames;
 
 bool auto_enabled;
-
 FILE* f;
-
 bool RECORDING;
 
-void autonomous_load() {
+Mutex auto_buffer;
+
+void auto_init() {
+	auto_buffer = mutexCreate();
+}
+
+void autonomous_save(char* name) {
 	RECORDING = false;
-	writeJINXMessage("Loading autonomous program...");
+	printf("Saving autonomous program...");
 
-	f = fopen("autoprog", "r");
-	autonomous_prog = (JoystickState*)malloc(fcount(f)); // Allocates memory for the autonomous inputs.
-	max_frames = fcount(f) / 8;
-	fread(autonomous_prog, 1, fcount(f), f); // Reads autonomous program into memory.
-
-	auto_enabled = true;
+	f = fopen(name, "w");
+	fwrite(autonomous_prog, 1, 48000, f);
 	fclose(f);
 }
 
+void autonomous_load(char* name) {
+	mutexTake(auto_buffer, -1);
+
+	auto_enabled = false;
+
+	RECORDING = false;
+	printf("Loading autonomous program...");
+
+	f = fopen(name, "r");
+	fread(autonomous_prog, 1, 48000, f);
+	max_frames = 6000;
+	autonomous_frame = 0;
+	fclose(f);
+
+	auto_enabled = true;
+
+	mutexGive(auto_buffer);
+}
+
 void start_recording() {
-	f = fopen("autoprog", "w");
+	memset(autonomous_prog, 0, 48000);
 	RECORDING = true;
 }
 
 void stop_recording() {
 	RECORDING = false;
-	fclose(f);
 }
 
 void joystick_setMode(int mode) {
@@ -75,12 +93,12 @@ void joystick_update() {
 		current_state.button_mask.g8 += joystickGetDigital(1, 8, JOY_RIGHT) * JOY_RIGHT;
 
 		if(RECORDING) {
-			// Writes the controller state to the file.
-			fwrite(&current_state, 8, 1, f);
-			fflush(f);
+			// Writes the controller state to memory.
+			memcpy(&autonomous_prog[autonomous_frame], &current_state, 8);
+			autonomous_frame++;
 		}
 	} else {
-		if(autonomous_frame < max_frames) {
+		if(autonomous_frame < 6000 && auto_enabled) {
 			// Copy current autonomous inputs from memory.
 			memcpy(&current_state, &autonomous_prog[autonomous_frame], 8);
 			autonomous_frame++;

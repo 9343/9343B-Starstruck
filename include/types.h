@@ -13,7 +13,7 @@ typedef signed short s16;
 typedef signed int s32;
 typedef signed long s64;
 
-/** This struct represents the state of a single controller.
+/** This struct represents a controller state.
  *  Stored as a 64-bit type.
  */
 typedef struct {
